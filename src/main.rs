@@ -1,13 +1,14 @@
 extern crate image;
 
 use iced::{
-    button, executor, Align, Application, Button, Column, Command, Element, Font,
-    HorizontalAlignment, Length, Row, Settings, Subscription, Text,
+    button, executor, Align, Application, Button, Column, Command, Container, Element, Font,
+    HorizontalAlignment, Image, Length, Row, Settings, Subscription, Text,
 };
 
 use iced_futures::{self, futures};
 
 use image::*;
+use image::io::Reader as ImageReader;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -59,7 +60,10 @@ impl Application for GUI {
     }
 
     fn view(&mut self) -> Element<Self::Message> {
-        Text::new("Hello World!").into()
+        let img = Image::new(iced::image::Handle::from_path(format!("./image/image.jpg")))
+            .width(Length::Fill)
+            .height(Length::Fill);
+        img.into()
     }
 
     // fn subscription(&self) -> Subscription<Message> {
