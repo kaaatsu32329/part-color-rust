@@ -60,10 +60,56 @@ impl Application for GUI {
     }
 
     fn view(&mut self) -> Element<Self::Message> {
-        let img = Image::new(iced::image::Handle::from_path(format!("./image/image.jpg")))
+        // prepare buttons
+        let select_button = Button::new(
+            &mut self.select_button_state,
+            Text::new("Select")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+        )
+        .min_width(80)
+        .on_press(Message::Select);
+
+        let start_button = Button::new(
+            &mut self.start_button_state,
+            Text::new("Start")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+        )
+        .min_width(80)
+        .on_press(Message::Select);
+
+        /*let img = Image::new(iced::image::Handle::from_path(format!("./image/image.jpg")))
             .width(Length::Fill)
             .height(Length::Fill);
-        img.into()
+        img.into()*/
+
+        // prepare image
+        let img = Container::new(
+            Image::new("./image/image.jpg")
+                .width(Length::Fill)
+                .height(Length::Fill),
+        )
+        .height(Length::Fill)
+        .width(Length::Fill)
+        .align_x(Align::Center)
+        .align_y(Align::Center);
+
+        // widgets
+        Column::new()
+            .push(img)
+            .push(
+                Row::new()
+                    .push(select_button)
+                    .push(start_button)
+                    .spacing(10),
+            )
+            .spacing(10)
+            .padding(10)
+            .align_items(Align::Center)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .into()
     }
 
     // fn subscription(&self) -> Subscription<Message> {
