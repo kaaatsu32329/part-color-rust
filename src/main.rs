@@ -1,5 +1,3 @@
-extern crate image;
-
 use iced::{
     button, executor, Align, Application, Button, Column, Command, Container, Element, Font,
     HorizontalAlignment, Image, Length, Row, Settings, Subscription, Text,
@@ -10,11 +8,16 @@ use iced_futures::{self, futures};
 use image::*;
 use image::io::Reader as ImageReader;
 
+use native_dialog::{FileDialog, MessageDialog, MessageType};
+
+use std::path::PathBuf;
+
 #[derive(Debug, Clone)]
 pub enum Message {
     Select,
     Start,
     Color,
+    Save,
 }
 
 pub enum Color {
@@ -25,14 +28,20 @@ pub enum Color {
 }
 
 const FONT: Font = Font::External {
-    name: "PixelMplus12-Regular",
-    bytes: include_bytes!("../font/PixelMplus12-Regular.ttf"),
+    //name: "PixelMplus12-Regular",
+    //bytes: include_bytes!("../font/PixelMplus12-Regular.ttf"),
+    name: "NotoSans-Bold",
+    bytes: include_bytes!("../font/NotoSans-Bold.ttf"),
 };
 
 struct GUI {
     select_button_state: button::State,
     start_button_state: button::State,
-    color_select: i32,
+    color_select_button_state: button::State,
+    save_button_state: button::State,
+    color_select: i8,
+    target_image_path: PathBuf, // とりあえず、、、
+    //processed_image: // cv-rsが出来上がったら独自の型にする。
 }
 
 impl Application for GUI {
@@ -45,7 +54,11 @@ impl Application for GUI {
             GUI {
                 select_button_state: button::State::new(),
                 start_button_state: button::State::new(),
+                color_select_button_state: button::State::new(),
+                save_button_state: button::State::new(),
                 color_select: 0,
+                target_image_path: PathBuf::new(),
+                //processed_image:
             },
             Command::none()
         )
@@ -56,6 +69,29 @@ impl Application for GUI {
     }
 
     fn update(&mut self, message: Self::Message) -> Command<Self::Message> {
+        match message {
+            Message::Select => {
+                self.target_image_path = FileDialog::new()
+                    .set_location("~")
+                    .add_filter("Image", &["png", "jpg", "jpeg"])
+                    .show_open_single_file()
+                    .unwrap()
+                    .unwrap();
+            }
+            Message::Start => {
+            }
+            Message::Color => {
+                self.color_select = 0;
+            }
+            Message::Save => {
+                let save_path = FileDialog::new()
+                    .set_location("~")
+                    .show_save_single_file()
+                    .unwrap()
+                    .unwrap();
+            }
+            _ => {}
+        }
         Command::none()
     }
 
@@ -77,16 +113,29 @@ impl Application for GUI {
                 .font(FONT),
         )
         .min_width(80)
-        .on_press(Message::Select);
+        .on_press(Message::Start);
 
-        /*let img = Image::new(iced::image::Handle::from_path(format!("./image/image.jpg")))
-            .width(Length::Fill)
-            .height(Length::Fill);
-        img.into()*/
+        let color_select_button = Button::new(
+            &mut self.color_select_button_state,
+            Text::new("Color")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+        )
+        .min_width(80)
+        .on_press(Message::Color);
+
+        let save_button = Button::new(
+            &mut self.save_button_state,
+            Text::new("Save")
+                .horizontal_alignment(HorizontalAlignment::Center)
+                .font(FONT),
+        )
+        .min_width(80)
+        .on_press(Message::Save);
 
         // prepare image
         let img = Container::new(
-            Image::new("./image/image.jpg")
+            Image::new(&self.target_image_path)
                 .width(Length::Fill)
                 .height(Length::Fill),
         )
@@ -101,7 +150,9 @@ impl Application for GUI {
             .push(
                 Row::new()
                     .push(select_button)
+                    .push(color_select_button)
                     .push(start_button)
+                    .push(save_button)
                     .spacing(10),
             )
             .spacing(10)

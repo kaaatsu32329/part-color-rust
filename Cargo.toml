@@ -11,3 +11,4 @@ iced_native = "0.2.2"
 iced_futures = "0.1.2"
 async-std = { version = "1.6.1", features = ["unstable"]}
 image = "*"
+native-dialog = "0.6.3"
