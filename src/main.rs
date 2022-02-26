@@ -1,16 +1,16 @@
+pub mod cvision;
+
+#[allow(unused_imports)]
 use iced::{
     button, executor, Align, Application, Button, Column, Command, Container, Element, Font,
     HorizontalAlignment, Image, Length, Row, Settings, Subscription, Text,
 };
-
-use iced_futures::{self, futures};
-
 use image::*;
-use image::io::Reader as ImageReader;
-
-use native_dialog::{FileDialog, MessageDialog, MessageType};
-
+use native_dialog::FileDialog;
 use std::path::PathBuf;
+use covrus;
+
+pub use crate::cvision::*;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -40,8 +40,8 @@ struct GUI {
     color_select_button_state: button::State,
     save_button_state: button::State,
     color_select: i8,
-    target_image_path: PathBuf, // とりあえず、、、
-    //processed_image: // cv-rsが出来上がったら独自の型にする。
+    target_image_path: PathBuf,
+    processed_image: ImageBuffer<image::Rgb<u8>, std::vec::Vec<u8>>,
 }
 
 impl Application for GUI {
@@ -58,7 +58,7 @@ impl Application for GUI {
                 save_button_state: button::State::new(),
                 color_select: 0,
                 target_image_path: PathBuf::new(),
-                //processed_image:
+                processed_image: ImageBuffer::new(1080, 1920),
             },
             Command::none()
         )
@@ -77,8 +77,13 @@ impl Application for GUI {
                     .show_open_single_file()
                     .unwrap()
                     .unwrap();
+                self.processed_image = image::open(&self.target_image_path).unwrap().to_rgb8();
             }
             Message::Start => {
+                // Part color processing
+                let target_image = covrus::cvt_img2array(&self.processed_image);
+                let target_image = part_color(&target_image, 1u8);
+                self.processed_image = covrus::cvt_array2img(&target_image);
             }
             Message::Color => {
                 self.color_select = 0;
@@ -89,8 +94,8 @@ impl Application for GUI {
                     .show_save_single_file()
                     .unwrap()
                     .unwrap();
+                self.processed_image.save(save_path).unwrap();
             }
-            _ => {}
         }
         Command::none()
     }
